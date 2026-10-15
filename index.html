@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><?= appName ?> </title>
+  <?!= include('Styles'); ?>
+<base target="_blank">
+</head>
+<body>
+
+<!-- Boot / loading -->
+<div id="boot" class="boot" role="status"><div class="spinner"></div><p>Loading…</p></div>
+
+<!-- Sign-in / access-denied / connection error -->
+<div id="auth" class="auth" hidden>
+  <div class="auth-card">
+    <span class="brand-mark">DRN</span>
+    <div id="authLogin" hidden>
+      <h1>Sign in</h1>
+      <p class="muted">Sign in with your registered email and the personal access key issued by your administrator.</p>
+      <form id="loginForm" novalidate>
+        <div class="field"><label for="loginEmail">Email</label><input id="loginEmail" type="email" autocomplete="username" required></div>
+        <div class="field"><label for="loginKey">Access key</label><input id="loginKey" type="password" autocomplete="current-password" placeholder="XXXX-XXXX-XXXX-XXXX" required></div>
+        <div id="loginError" class="form-error" role="alert" hidden></div>
+        <div class="form-actions"><button id="loginBtn" class="btn btn-primary" type="submit">Sign in</button></div>
+      </form>
+    </div>
+    <div id="authDenied" hidden>
+      <h1>Access not available</h1>
+      <p id="deniedMsg"></p>
+      <div class="form-actions"><button class="btn btn-primary" id="deniedLogin" type="button">Back to sign in</button></div>
+    </div>
+    <div id="authError" hidden>
+      <h1>Cannot load the system</h1>
+      <p id="authErrorMsg"></p>
+      <div class="form-actions"><button class="btn btn-primary" id="authRetry" type="button">Retry</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Application -->
+<div id="app" hidden>
+  <header class="topbar">
+    <button id="menuBtn" class="icon-btn" type="button" aria-label="Open or close navigation" aria-controls="sidebar" aria-expanded="false"></button>
+    <div class="brand"><span class="brand-mark">DRN</span><span id="appName"></span></div>
+    <div class="topbar-right">
+      <div class="userbox"><span id="userName"></span><span id="userRole" class="role-badge"></span></div>
+      <button id="signOutBtn" class="btn btn-sm" type="button" hidden>Sign out</button>
+    </div>
+  </header>
+
+  <nav id="sidebar" class="sidebar" aria-label="Main navigation"><ul id="navList"></ul></nav>
+  <div id="scrim" class="scrim" hidden></div>
+
+  <main id="main" tabindex="-1">
+
+    <!-- Dashboard -->
+    <section id="view-dashboard" class="view" aria-labelledby="h-dashboard" hidden>
+      <div class="page-head">
+        <h1 id="h-dashboard">Dashboard</h1>
+        <div class="page-tools"><span class="muted small" id="dashStamp"></span><button id="dashRefresh" class="btn" type="button">Refresh</button></div>
+      </div>
+      <div class="cards" id="dashCards" aria-live="polite"></div>
+      <div class="panel">
+        <div class="panel-head"><h2>Recent Documents</h2><button class="btn btn-sm" type="button" data-nav="records">View all records</button></div>
+        <div id="dashTable"></div>
+      </div>
+    </section>
+
+    <!-- Add -->
+    <section id="view-add" class="view" aria-labelledby="h-add" hidden>
+      <div class="page-head"><h1 id="h-add">Add New Document</h1></div>
+      <div id="addResult" class="panel" hidden></div>
+      <form id="addForm" class="panel" novalidate>
+        <p class="muted small">Fields marked <span class="req">*</span> are required. Attachments are uploaded only after you click Save Document.</p>
+        <div id="addFields" class="form-grid"></div>
+        <div id="addError" class="form-error" role="alert" hidden></div>
+        <div class="form-actions">
+          <button id="addSubmit" class="btn btn-primary" type="submit">Save Document</button>
+          <button id="addReset" class="btn" type="button">Clear Form</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Records -->
+    <section id="view-records" class="view" aria-labelledby="h-records" hidden>
+      <div class="page-head">
+        <h1 id="h-records">Document Records</h1>
+        <div class="page-tools"><button id="recExport" class="btn" type="button">Export CSV</button></div>
+      </div>
+      <form id="recFilters" class="panel filters" novalidate>
+        <div class="field wide"><label for="rf_q">Search</label><input id="rf_q" type="search" placeholder="DRN, sender, subject, unit, division head" maxlength="100"></div>
+        <div class="field"><label for="rf_status">Current Status</label><select id="rf_status"></select></div>
+        <div class="field"><label for="rf_unit">Concern Unit</label><input id="rf_unit" type="text" list="unitList" maxlength="150" autocomplete="off"></div>
+        <div class="field"><label for="rf_head">Division Head/OIC</label><input id="rf_head" type="text" maxlength="150"></div>
+        <div class="field"><label for="rf_rFrom">Received from</label><input id="rf_rFrom" type="date"></div>
+        <div class="field"><label for="rf_rTo">Received to</label><input id="rf_rTo" type="date"></div>
+        <div class="field"><label for="rf_fFrom">Forwarded from</label><input id="rf_fFrom" type="date"></div>
+        <div class="field"><label for="rf_fTo">Forwarded to</label><input id="rf_fTo" type="date"></div>
+        <div class="field"><label for="rf_size">Rows per page</label><select id="rf_size"><option>10</option><option>25</option><option>50</option></select></div>
+        <div class="field"><label class="check"><input id="rf_overdue" type="checkbox"> Overdue only</label>
+          <label class="check" id="rf_archWrap" hidden><input id="rf_archived" type="checkbox"> Include archived</label></div>
+        <div class="actions"><button class="btn btn-primary" type="submit">Apply filters</button><button id="rf_reset" class="btn" type="button">Reset</button></div>
+      </form>
+      <div class="panel"><div id="recTable"></div><div id="recPager" class="pager"></div></div>
+    </section>
+
+    <!-- Track -->
+    <section id="view-track" class="view" aria-labelledby="h-track" hidden>
+      <div class="page-head"><h1 id="h-track">Track Document</h1></div>
+      <form id="trackForm" class="panel" novalidate>
+        <label for="trackDrn">Document Routing Number (DRN)</label>
+        <div class="inline" style="margin-top:6px">
+          <input id="trackDrn" type="text" placeholder="e.g. DSWD-CO-A-COMM-26-10-95717-S" maxlength="60" autocomplete="off" spellcheck="false">
+          <button class="btn btn-primary" type="submit">Track</button>
+        </div>
+      </form>
+      <div id="trackOut" aria-live="polite"></div>
+    </section>
+
+    <!-- Routing -->
+    <section id="view-routing" class="view" aria-labelledby="h-routing" hidden>
+      <div class="page-head"><h1 id="h-routing">Forward / Routing History</h1></div>
+      <div class="panel">
+        <div class="inline-form">
+          <div class="field" style="flex:1 1 260px"><label for="hist_drn">DRN</label><input id="hist_drn" type="text" maxlength="60" placeholder="Type a DRN (or part of it) to filter the history" autocomplete="off" spellcheck="false"></div>
+          <button id="fwdFromInput" class="btn btn-primary" type="button" data-perm="forward">Forward Document</button>
+        </div>
+        <p class="hint" style="margin-top:8px">Type a complete DRN and click Forward Document, or use the Forward button on any record. Every routing event below is permanent and is never overwritten.</p>
+      </div>
+      <div class="panel"><div id="histTable"></div><div id="histPager" class="pager"></div></div>
+    </section>
+
+    <!-- Reports -->
+    <section id="view-reports" class="view" aria-labelledby="h-reports" hidden>
+      <div class="page-head"><h1 id="h-reports">Reports</h1></div>
+      <form id="repForm" class="panel filters" novalidate>
+        <div class="field wide"><label for="repType">Report</label>
+          <select id="repType">
+            <option value="daily">Daily document receiving report</option>
+            <option value="monthly">Monthly document receiving report</option>
+            <option value="byUnit">Documents by concern unit</option>
+            <option value="byStatus">Documents by status</option>
+            <option value="byHead">Documents by division head/OIC</option>
+            <option value="pending">Pending documents report</option>
+            <option value="completed">Completed documents report</option>
+            <option value="range">Date-range report</option>
+          </select></div>
+        <div class="field" data-for="daily"><label for="repDate">Date</label><input id="repDate" type="date"></div>
+        <div class="field" data-for="monthly"><label for="repMonth">Month</label><input id="repMonth" type="month" placeholder="yyyy-mm"></div>
+        <div class="field" data-for="byUnit byStatus byHead pending completed range"><label for="repFrom">Received from</label><input id="repFrom" type="date"></div>
+        <div class="field" data-for="byUnit byStatus byHead pending completed range"><label for="repTo">Received to</label><input id="repTo" type="date"></div>
+        <div class="field" data-for="daily monthly pending completed range"><label for="repUnit">Concern Unit</label><input id="repUnit" type="text" list="unitList" maxlength="150" autocomplete="off"></div>
+        <div class="field" data-for="range"><label for="repStatus">Status</label><select id="repStatus"></select></div>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">Generate report</button>
+          <button id="repPrint" class="btn" type="button" disabled>Print</button>
+          <button id="repExport" class="btn" type="button" disabled>Export CSV</button>
+        </div>
+      </form>
+      <div id="repOut" class="panel" hidden></div>
+    </section>
+
+    <!-- Users -->
+    <section id="view-users" class="view" aria-labelledby="h-users" hidden>
+      <div class="page-head"><h1 id="h-users">User Management</h1><div class="page-tools"><button id="userAdd" class="btn btn-primary" type="button">Add User</button></div></div>
+      <div class="panel">
+        <div id="userTable"></div>
+        <div class="role-help">
+          <span><b>Administrator</b> — full access, users, settings, archive/restore.</span>
+          <span><b>Encoder</b> — register and edit documents, forward, update status, upload files, reports.</span>
+          <span><b>Staff</b> — view permitted documents (own unit when a unit is set), forward and update status.</span>
+          <span><b>Viewer</b> — read-only access to permitted documents and reports.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section id="view-settings" class="view" aria-labelledby="h-settings" hidden>
+      <div class="page-head"><h1 id="h-settings">Settings</h1></div>
+      <div id="setInfo" class="panel"></div>
+      <form id="setForm" class="panel" novalidate>
+        <div class="form-grid">
+          <div class="field"><label for="set_AppName">Application name <span class="req">*</span></label><input id="set_AppName" type="text" maxlength="80"></div>
+          <div class="field"><label for="set_OfficeName">Office / agency name (printed on reports) <span class="req">*</span></label><input id="set_OfficeName" type="text" maxlength="120"></div>
+          <div class="field"><label for="set_DRNPrefix">DRN prefix <span class="req">*</span></label><input id="set_DRNPrefix" type="text" maxlength="40"><small class="hint">Format: PREFIX-YY-MM-NNNNN-SUFFIX, e.g. DSWD-CO-A-COMM-26-10-95717-S. Applies to new documents only.</small></div>
+          <div class="field full"><label for="set_DRNMode">DRN input mode</label><select id="set_DRNMode"><option value="auto">Automatic only — the system generates the DRN</option><option value="manual">Manual only — automatic DRN disabled; users type the DRN</option><option value="both">Both — user chooses automatic or manual for each document</option></select><small class="hint">Use Manual when the documents you receive already have a DRN. Manually entered DRNs never change the automatic running number, and a DRN that is already registered is rejected.</small></div>
+          <div class="field"><label for="set_DRNSuffix">DRN suffix</label><input id="set_DRNSuffix" type="text" maxlength="5"><small class="hint">e.g. S. Leave blank for none.</small></div>
+          <div class="field"><label for="set_DRNStartNumber">DRN running number starts at</label><input id="set_DRNStartNumber" type="number" min="1" step="1"><small class="hint">The next DRN is always the highest existing number + 1.</small></div>
+          <div class="field"><label for="set_DRNSeqDigits">DRN running number digits</label><input id="set_DRNSeqDigits" type="number" min="1" max="9" step="1"></div>
+          <div class="field"><label for="set_UploadFolderId">Upload folder ID (Google Drive)</label><input id="set_UploadFolderId" type="text" maxlength="120" autocomplete="off"></div>
+          <div class="field"><label for="set_MaxUploadMB">Maximum upload size (MB) <span class="req">*</span></label><input id="set_MaxUploadMB" type="number" min="1" max="25" step="1"><small class="hint">1–25 MB. See the note below about Apps Script limits.</small></div>
+          <div class="field"><label for="set_DefaultPageSize">Default rows per page</label><select id="set_DefaultPageSize"><option>10</option><option>25</option><option>50</option></select></div>
+          <div class="field"><label for="set_AutoRefreshSeconds">Dashboard auto-refresh (seconds, 0 = off)</label><input id="set_AutoRefreshSeconds" type="number" min="0" max="600" step="1"><small class="hint">0, or 30–600.</small></div>
+          <div class="field"><span class="strong" style="font-size:.9rem">Allowed file types</span><div id="set_ext" class="inline"></div></div>
+          <div class="field"><label for="set_Statuses">Statuses (one per line)</label><textarea id="set_Statuses" rows="8"></textarea><small class="hint">The seven core statuses are always kept. Add extra statuses on new lines.</small></div>
+          <div class="field"><label for="set_Units">Offices / units (one per line)</label><textarea id="set_Units" rows="8"></textarea></div>
+        </div>
+        <div id="setError" class="form-error" role="alert" hidden></div>
+        <div class="form-actions"><button id="setSave" class="btn btn-primary" type="submit">Save Settings</button></div>
+      </form>
+    </section>
+
+  </main>
+</div>
+
+<datalist id="unitList"></datalist>
+<div id="modalRoot"></div>
+<div id="toasts" aria-live="polite"></div>
+<div id="spinner" hidden role="status" aria-label="Working"><div class="spinner"></div></div>
+<div id="printArea" aria-hidden="true"></div>
+
+<?!= include('JavaScript'); ?>
+</body>
+</html>
