@@ -4,52 +4,75 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Document Routing and Tracking System</title>
-  <!--
-    GITHUB PAGES EMBED
-    1. I-deploy muna ang app sa Apps Script (Deploy > New deployment > Web app).
-    2. Palitan ang value ng APP_URL sa baba ng iyong /exec URL.
-    3. I-commit ang file na ito sa GitHub repo mo, tapos i-enable ang
-       Settings > Pages (branch: main, folder: / (root)).
-  -->
   <style>
     * { box-sizing: border-box; }
     html, body { margin: 0; height: 100%; background: #0b2a55; }
     .frame-wrap { position: fixed; inset: 0; }
     iframe { width: 100%; height: 100%; border: 0; display: block; }
+    
+    /* Floating button para sa fallback */
+    .floating-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #9fc1f5;
+      color: #0b2a55;
+      padding: 12px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      z-index: 9999;
+      transition: background 0.3s;
+    }
+    .floating-btn:hover { background: #ffffff; }
+
     .fallback {
       position: fixed; inset: 0; display: none; place-items: center;
       color: #fff; font-family: "Segoe UI", Arial, sans-serif; text-align: center; padding: 24px;
+      z-index: 1000;
     }
-    .fallback a { color: #9fc1f5; }
+    .fallback a { color: #9fc1f5; font-weight: bold; font-size: 1.2em; }
   </style>
-<base target="_blank">
+  <base target="_blank">
 </head>
 <body>
   <div class="frame-wrap">
     <iframe id="appFrame"
             src="https://script.google.com/macros/s/AKfycbzAfBtbI0Hk2noo2qT_4V9SBvG-Yhpv7NrTgO67IEyEBmWHU1pgachwGKkbCB6eYvq5/exec"
-         
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
             allow="clipboard-read; clipboard-write"
             referrerpolicy="no-referrer-when-downgrade"></iframe>
   </div>
+
+  <!-- Fallback Button na laging nakikita kung sakaling mag-fail ang iframe -->
+  <a href="https://script.google.com/macros/s/AKfycbzAfBtbI0Hk2noo2qT_4V9SBvG-Yhpv7NrTgO67IEyEBmWHU1pgachwGKkbCB6eYvq5/exec" 
+     target="_blank" rel="noopener" class="floating-btn">
+     ⚠️ Buksan ang App sa Bagong Tab (Kung blanko ang screen)
+  </a>
+
   <div class="fallback" id="fallback">
     <div>
       <h1>Document Routing and Tracking System</h1>
-      
-      <a href="https://script.google.com/macros/s/AKfycbzAfBtbI0Hk2noo2qT_4V9SBvG-Yhpv7NrTgO67IEyEBmWHU1pgachwGKkbCB6eYvq5/exec" target="_blank" rel="noopener"></a></p>
+      <p>Hindi ma-load ang iframe. Maaaring naka-block ng browser ang third-party cookies.</p>
+      <p><a href="https://script.google.com/macros/s/AKfycbzAfBtbI0Hk2noo2qT_4V9SBvG-Yhpv7NrTgO67IEyEBmWHU1pgachwGKkbCB6eYvq5/exec" target="_blank" rel="noopener">I-click dito para buksan ang app</a></p>
     </div>
   </div>
+
   <script>
-    
     (function () {
       var f = document.getElementById('appFrame');
       setTimeout(function () {
         try {
-          if (!f.contentWindow || f.contentWindow.length === 0 && f.contentDocument === null) {
+          // Dahil sa Cross-Origin policy, madalas mag-throw ito ng error kahit gumagana ang iframe.
+          // Kaya mas reliable ang "Floating Button" na idinagdag sa itaas.
+          if (!f.contentWindow) {
             document.getElementById('fallback').style.display = 'grid';
           }
         } catch (e) {
-          // Cross-origin: hindi natin mabasa ang loob, normal ito kapag gumagana ang iframe.
+          // Normal ito para sa cross-origin iframes.
+          console.log("Iframe is cross-origin. Rely on the floating button if needed.");
         }
       }, 5000);
     })();
