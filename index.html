@@ -4,53 +4,59 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Document Routing and Tracking System</title>
-  <!--
-    GITHUB PAGES EMBED
-    1. I-deploy muna ang app sa Apps Script (Deploy > New deployment > Web app).
-    2. Palitan ang value ng APP_URL sa baba ng iyong /exec URL.
-    3. I-commit ang file na ito sa GitHub repo mo, tapos i-enable ang
-       Settings > Pages (branch: main, folder: / (root)).
-  -->
   <style>
     * { box-sizing: border-box; }
-    html, body { margin: 0; height: 100%; background: #0b2a55; }
-    .frame-wrap { position: fixed; inset: 0; }
-    iframe { width: 100%; height: 100%; border: 0; display: block; }
-    .fallback {
+    html, body { margin: 0; height: 100%; background: #0b2a55; overflow: hidden; }
+
+    /* Itinatago ang "This application was created by a Google Apps Script user" banner
+       sa pamamagitan ng pag-akyat ng iframe palabas ng screen. Kung may natirang banner,
+       dagdagan ang BANNER_PX sa ibaba (default 50). */
+    .frame-wrap { position: fixed; inset: 0; overflow: hidden; }
+    iframe { position: absolute; left: 0; width: 100%; border: 0; display: block; }
+
+    .msg {
       position: fixed; inset: 0; display: none; place-items: center;
       color: #fff; font-family: "Segoe UI", Arial, sans-serif; text-align: center; padding: 24px;
     }
-    .fallback a { color: #9fc1f5; }
+    .msg a { color: #9fc1f5; }
+    .direct {
+      position: fixed; right: 10px; bottom: 8px; z-index: 5;
+      font: 12px "Segoe UI", Arial, sans-serif; color: #fff; opacity: .55;
+      background: rgba(11,42,85,.8); padding: 4px 8px; border-radius: 6px; text-decoration: none;
+    }
+    .direct:hover { opacity: 1; }
   </style>
 </head>
 <body>
-  <div class="frame-wrap">
-    <iframe id="appFrame"
-            src="APP_URL"
-            allow="clipboard-read; clipboard-write"
-            referrerpolicy="no-referrer-when-downgrade"></iframe>
-  </div>
-  <div class="fallback" id="fallback">
+  <div class="frame-wrap"><iframe id="appFrame" allow="clipboard-read; clipboard-write"></iframe></div>
+
+  <div class="msg" id="notset">
     <div>
-      <h1>Document Routing and Tracking System</h1>
-      <p>Hindi maipakita ang app sa iframe ng browser na ito.<br>
-      <a id="directLink" href="APP_URL" target="_blank" rel="noopener">Buksan ang app nang direkta</a></p>
+      <h1>Hindi pa nailalagay ang APP_URL</h1>
+      <p>Buksan ang <code>index.html</code>, hanapin ang <code>APP_URL</code> sa baba,<br>
+      at ilagay ang iyong Apps Script <code>/exec</code> URL.</p>
     </div>
   </div>
+  <a class="direct" id="directLink" href="#" target="_blank" rel="noopener">Buksan nang direkta</a>
+
   <script>
-    // Kung nag-block ang browser ng iframe (X-Frame-Options / CSP), ipakita ang direct link.
-    (function () {
-      var f = document.getElementById('appFrame');
-      setTimeout(function () {
-        try {
-          if (!f.contentWindow || f.contentWindow.length === 0 && f.contentDocument === null) {
-            document.getElementById('fallback').style.display = 'grid';
-          }
-        } catch (e) {
-          // Cross-origin: hindi natin mabasa ang loob, normal ito kapag gumagana ang iframe.
-        }
-      }, 5000);
-    })();
+    // ====== I-EDIT DITO ======
+    // Apps Script: Deploy > Manage deployments > kopyahin ang Web app URL (nagtatapos sa /exec)
+    var APP_URL = 'https://script.google.com/macros/s/AKfycbzAfBtbI0Hk2noo2qT_4V9SBvG-Yhpv7NrTgO67IEyEBmWHU1pgachwGKkbCB6eYvq5/exec';
+    var BANNER_PX = 50;   // taas ng Google banner na itatago
+    // =========================
+
+    var f = document.getElementById('appFrame');
+    if (!/^https:\/\/script\.google\.com\/(macros\/s\/|a\/macros\/).+\/exec/.test(APP_URL)) {
+      document.getElementById('notset').style.display = 'grid';
+      document.querySelector('.frame-wrap').style.display = 'none';
+      document.getElementById('directLink').style.display = 'none';
+    } else {
+      f.style.top = '-' + BANNER_PX + 'px';
+      f.style.height = 'calc(100% + ' + BANNER_PX + 'px)';
+      f.src = APP_URL;
+      document.getElementById('directLink').href = APP_URL;
+    }
   </script>
 </body>
 </html>
