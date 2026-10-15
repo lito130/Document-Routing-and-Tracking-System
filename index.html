@@ -4,49 +4,54 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Document Routing and Tracking System</title>
-    <link rel="icon" type="image/png" href="11153342.png">
+  <link rel="icon" type="image/png" href="11153342.png">
+  <!--
+    GITHUB PAGES EMBED
+    1. I-deploy muna ang app sa Apps Script (Deploy > New deployment > Web app).
+    2. Palitan ang value ng APP_URL sa baba ng iyong /exec URL.
+    3. I-commit ang file na ito sa GitHub repo mo, tapos i-enable ang
+       Settings > Pages (branch: main, folder: / (root)).
+  -->
   <style>
     * { box-sizing: border-box; }
-    html, body { margin: 0; height: 100%; background: #0b2a55; overflow: hidden; }
-
-   
-    .frame-wrap { position: fixed; inset: 0; overflow: hidden; }
-    iframe { position: absolute; left: 0; width: 100%; border: 0; display: block; }
-
-    .msg {
+    html, body { margin: 0; height: 100%; background: #0b2a55; }
+    .frame-wrap { position: fixed; inset: 0; }
+    iframe { width: 100%; height: 100%; border: 0; display: block; }
+    .fallback {
       position: fixed; inset: 0; display: none; place-items: center;
       color: #fff; font-family: "Segoe UI", Arial, sans-serif; text-align: center; padding: 24px;
     }
-    .msg a { color: #9fc1f5; }
-    .direct {
-      position: fixed; right: 10px; bottom: 8px; z-index: 5;
-      font: 12px "Segoe UI", Arial, sans-serif; color: #fff; opacity: .55;
-      background: rgba(11,42,85,.8); padding: 4px 8px; border-radius: 6px; text-decoration: none;
-    }
-    .direct:hover { opacity: 1; }
+    .fallback a { color: #9fc1f5; }
   </style>
 </head>
 <body>
-  <div class="frame-wrap"><iframe id="appFrame" allow="clipboard-read; clipboard-write"></iframe></div>
-
-  
+  <div class="frame-wrap">
+    <iframe id="appFrame"
+            src="https://script.google.com/macros/s/AKfycbzAfBtbI0Hk2noo2qT_4V9SBvG-Yhpv7NrTgO67IEyEBmWHU1pgachwGKkbCB6eYvq5/exec"
+            allow="clipboard-read; clipboard-write"
+            referrerpolicy="no-referrer-when-downgrade"></iframe>
+  </div>
+  <div class="fallback" id="fallback">
+    <div>
+      <h1>Document Routing and Tracking System</h1>
+      <p>Hindi maipakita ang app sa iframe ng browser na ito.<br>
+      <a id="directLink" href="https://script.google.com/macros/s/AKfycbzAfBtbI0Hk2noo2qT_4V9SBvG-Yhpv7NrTgO67IEyEBmWHU1pgachwGKkbCB6eYvq5/exec" target="_blank" rel="noopener">Buksan ang app nang direkta</a></p>
+    </div>
+  </div>
   <script>
-   
-    var APP_URL = 'https://script.google.com/macros/s/AKfycbzAfBtbI0Hk2noo2qT_4V9SBvG-Yhpv7NrTgO67IEyEBmWHU1pgachwGKkbCB6eYvq5/exec';
-    var BANNER_PX = 0;  
-    // =========================
-
-    var f = document.getElementById('appFrame');
-    if (!/^https:\/\/script\.google\.com\/(macros\/s\/|a\/macros\/).+\/exec/.test(APP_URL)) {
-      document.getElementById('notset').style.display = 'grid';
-      document.querySelector('.frame-wrap').style.display = 'none';
-      document.getElementById('directLink').style.display = 'none';
-    } else {
-      f.style.top = '-' + BANNER_PX + 'px';
-      f.style.height = 'calc(100% + ' + BANNER_PX + 'px)';
-      f.src = APP_URL;
-      document.getElementById('directLink').href = APP_URL;
-    }
+    // Kung nag-block ang browser ng iframe (X-Frame-Options / CSP), ipakita ang direct link.
+    (function () {
+      var f = document.getElementById('appFrame');
+      setTimeout(function () {
+        try {
+          if (!f.contentWindow || f.contentWindow.length === 0 && f.contentDocument === null) {
+            document.getElementById('fallback').style.display = 'grid';
+          }
+        } catch (e) {
+          // Cross-origin: hindi natin mabasa ang loob, normal ito kapag gumagana ang iframe.
+        }
+      }, 5000);
+    })();
   </script>
 </body>
 </html>
