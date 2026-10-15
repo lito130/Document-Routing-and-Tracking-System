@@ -1,17 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document Routing and Tracking System</title>
+  <!-- Pwede mong palitan ang favicon URL kung may specific icon ka na -->
+  <link rel="">
   <style>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; height: 100%; background: #0b2a55; }
-    .frame-wrap { position: fixed; inset: 0; }
-    iframe { width: 100%; height: 100%; border: 0; display: block; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { 
+      width: 100%; 
+      height: 100%; 
+      overflow: hidden;  
+      background: #0b2a55; /* Ginamit ang original na blue theme mo */
+    }
+  
+    iframe { 
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%; 
+      height: 100%; 
+      border: none; 
+      display: block; 
+    }
+
+    #loader {
+      position: fixed; inset: 0; background: #0b2a55;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; transition: opacity 0.6s ease;
+    }
+    #loader.hidden { opacity: 0; pointer-events: none; }
+    #loader img { width: 72px; height: 72px; margin-bottom: 24px; object-fit: contain; }
     
-    /* Floating button para sa fallback */
-    .floating-btn {
+    .spinner {
+      width: 44px; height: 44px; border: 4px solid rgba(159, 193, 245, 0.2);
+      border-top-color: #9fc1f5; border-radius: 50%; animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    #loader p { 
+      color: #9fc1f5; 
+      margin-top: 18px; 
+      font-family: 'Segoe UI', sans-serif; 
+      font-size: 14px; 
+      letter-spacing: 0.5px; 
+    }
+
+    /* Fallback button kung sakaling ma-block ng browser ang iframe */
+    .fallback-btn {
       position: fixed;
       bottom: 20px;
       right: 20px;
@@ -23,58 +60,86 @@
       font-family: "Segoe UI", Arial, sans-serif;
       font-weight: bold;
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      z-index: 9999;
+      z-index: 10000;
       transition: background 0.3s;
+      display: none; /* Hidden by default, ipapakita lang kung may issue */
     }
-    .floating-btn:hover { background: #ffffff; }
-
-    .fallback {
-      position: fixed; inset: 0; display: none; place-items: center;
-      color: #fff; font-family: "Segoe UI", Arial, sans-serif; text-align: center; padding: 24px;
-      z-index: 1000;
-    }
-    .fallback a { color: #9fc1f5; font-weight: bold; font-size: 1.2em; }
+    .fallback-btn:hover { background: #ffffff; }
   </style>
   <base target="_blank">
 </head>
 <body>
-  <div class="frame-wrap">
-    <iframe id="appFrame"
-            src="https://script.google.com/macros/s/AKfycbzAfBtbI0Hk2noo2qT_4V9SBvG-Yhpv7NrTgO67IEyEBmWHU1pgachwGKkbCB6eYvq5/exec"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
-            allow="clipboard-read; clipboard-write"
-            referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+  <!-- Loading Screen -->
+  <div id="loader">
+    <img src="https://cdn-icons-png.flaticon.com/512/2965/2965335.png" alt="System Logo">
+    <div class="spinner"></div>
+    <p>Loading Document Routing and Tracking System…</p>
   </div>
 
-  <!-- Fallback Button na laging nakikita kung sakaling mag-fail ang iframe -->
+  <!-- Fallback Button (Lalabas lang after 8 seconds kung blanko pa rin) -->
   <a href="https://script.google.com/macros/s/AKfycbzAfBtbI0Hk2noo2qT_4V9SBvG-Yhpv7NrTgO67IEyEBmWHU1pgachwGKkbCB6eYvq5/exec" 
-     target="_blank" rel="noopener" class="floating-btn">
-     ⚠️ Buksan ang App sa Bagong Tab (Kung blanko ang screen)
+     target="_blank" rel="noopener" class="fallback-btn" id="fallbackBtn">
+     ⚠️ Buksan sa Bagong Tab (Kung blanko ang screen)
   </a>
 
-  <div class="fallback" id="fallback">
-    <div>
-      <h1>Document Routing and Tracking System</h1>
-      <p>Hindi ma-load ang iframe. Maaaring naka-block ng browser ang third-party cookies.</p>
-      <p><a href="https://script.google.com/macros/s/AKfycbzAfBtbI0Hk2noo2qT_4V9SBvG-Yhpv7NrTgO67IEyEBmWHU1pgachwGKkbCB6eYvq5/exec" target="_blank" rel="noopener">I-click dito para buksan ang app</a></p>
-    </div>
-  </div>
+  <!-- Iframe ng Google Apps Script -->
+  <iframe 
+    id="appFrame"
+    src="https://script.google.com/macros/s/AKfycbzAfBtbI0Hk2noo2qT_4V9SBvG-Yhpv7NrTgO67IEyEBmWHU1pgachwGKkbCB6eYvq5/exec" 
+    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
+    allowfullscreen
+    allow="geolocation; clipboard-read; clipboard-write"
+    referrerpolicy="no-referrer-when-downgrade">
+  </iframe>
 
   <script>
+    // 1. Auto-hide loader after 20 seconds bilang fallback
+    setTimeout(function() { 
+      document.getElementById('loader').classList.add('hidden'); 
+    }, 20000);   
+
+    // 2. Ipakita ang fallback button after 8 seconds kung sakaling ma-block ang iframe
+    setTimeout(function() {
+      var iframe = document.getElementById('appFrame');
+      try {
+        // Kung cross-origin at hindi mabasa, normal lang ito. 
+        // Pero kung gusto nating maging safe, ipapakita natin ang button.
+        document.getElementById('fallbackBtn').style.display = 'block';
+      } catch (e) {
+        document.getElementById('fallbackBtn').style.display = 'block';
+      }
+    }, 8000);
+
+    // 3. PostMessage Communication (Gaya ng ibinigay mong code)
     (function () {
-      var f = document.getElementById('appFrame');
-      setTimeout(function () {
+      var KEYS = ['drts_session', 'drts_page']; // Ginawang drts para specific sa system na ito
+      var ALLOWED = /^https:\/\/([a-z0-9-]+\.)*(googleusercontent\.com|google\.com)$/;
+      
+      window.addEventListener('message', function (e) {
+        if (!ALLOWED.test(e.origin)) return;
+        var d = e.data;
+        if (!d || typeof d.sdType !== 'string') return;
+        
         try {
-          // Dahil sa Cross-Origin policy, madalas mag-throw ito ng error kahit gumagana ang iframe.
-          // Kaya mas reliable ang "Floating Button" na idinagdag sa itaas.
-          if (!f.contentWindow) {
-            document.getElementById('fallback').style.display = 'grid';
+          if (d.sdType === 'get') {
+            e.source.postMessage({
+              sdType: 'state',
+              session: sessionStorage.getItem('drts_session'),
+              page: sessionStorage.getItem('drts_page')
+            }, e.origin);
+          } else if (d.sdType === 'save' && KEYS.indexOf(d.key) > -1 && typeof d.value === 'string') {
+            sessionStorage.setItem(d.key, d.value);
+          } else if (d.sdType === 'ready') {
+            // Kapag nag-send ang GAS ng 'ready', agad na itatago ang loader
+            document.getElementById('loader').classList.add('hidden');
+          } else if (d.sdType === 'clear') {
+            KEYS.forEach(function (k) { sessionStorage.removeItem(k); });
           }
-        } catch (e) {
-          // Normal ito para sa cross-origin iframes.
-          console.log("Iframe is cross-origin. Rely on the floating button if needed.");
+        } catch (err) {
+          console.error("postMessage error:", err);
         }
-      }, 5000);
+      });
     })();
   </script>
 </body>
